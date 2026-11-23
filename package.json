@@ -1,0 +1,15 @@
+{
+  "name": "patamaji-kitui",
+  "version": "1.0.0",
+  "description": "Pata Maji Kitui - Water Kiosk M-Pesa Payment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

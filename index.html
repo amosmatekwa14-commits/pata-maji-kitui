@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pata Maji - Pure Water in Kwa Vonza</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f6fbfc;color:#0a2a3a}
+a{text-decoration:none;color:inherit}
+.top{max-width:1100px;margin:0 auto;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:22px;letter-spacing:1px}
+.logo span{color:#00a651}.logo small{display:block;font-size:11px;letter-spacing:3px;color:#666;font-weight:700}
+.nav{display:flex;gap:20px;font-size:14px;font-weight:700;color:#333}
+.btn-yellow{background:#ffc107;color:#000;padding:12px 22px;border-radius:999px;font-weight:900;border:none;cursor:pointer;font-size:15px}
+.hero{max-width:1100px;margin:10px auto 0;padding:20px;display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+.hero h1{font-size:52px;line-height:1.05;letter-spacing:-1px}
+.hero h1 em{color:#0077cc;font-style:normal}
+.hero p{margin:18px 0;color:#555;line-height:1.6}
+.hero-img{background:#0a3a5a;border-radius:28px;overflow:hidden;height:360px;display:flex;align-items:center;justify-content:center;color:white;font-size:90px;position:relative;text-align:center}
+.hero-img:after{content:"💧 PATA MAJI • KWA VONZA";position:absolute;bottom:18px;left:18px;background:rgba(255,255,255,.95);color:#0a2a3a;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:900}
+.section{max-width:1100px;margin:0 auto;padding:50px 20px}
+.section h2{font-size:36px;margin-bottom:8px}
+.section p.sub{color:#666;margin-bottom:25px;line-height:1.6}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.card .img{height:170px;background:#e8f6ff;display:flex;align-items:center;justify-content:center;font-size:70px}
+.card .pad{padding:16px}
+.card h3{font-size:18px;margin-bottom:6px}
+.card p{font-size:14px;color:#666;line-height:1.5}
+.price{color:#0077cc;font-weight:900;font-size:18px;margin-top:10px}
+.dark{background:#0a2a3a;color:white;border-radius:28px;padding:35px;margin:0 20px}
+.dark h2{color:white}.dark p{color:#cbd5e1}
+.steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:25px}
+.step{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:20px}
+.step b{font-size:28px}
+.step h4{margin:10px 0 6px}.step p{font-size:14px;line-height:1.6}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:9px 14px;border-radius:999px;border:2px solid #e0e0e0;background:white;cursor:pointer;font-weight:800;font-size:13px}
+.tab.active{background:#0a2a3a;color:white;border-color:#0a2a3a}
+.products{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prod{border:2px solid #e0e0e0;border-radius:14px;padding:12px;cursor:pointer;background:white}
+.prod.selected{border-color:#0077cc;background:#e8f6ff}
+.prod b{color:#0077cc;font-size:17px}.prod span{font-size:12px;color:#555;display:block}
+.order{background:white;border-radius:28px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.08);display:grid;grid-template-columns:1fr 1fr;gap:25px}
+label{font-weight:800;font-size:13px;display:block;margin:14px 0 6px}
+input,select,textarea{width:100%;padding:13px;border:2px solid #e0e0e0;border-radius:10px;font-size:15px}
+input:focus,select:focus{border-color:#0077cc;outline:none}
+.paybtn{width:100%;background:#00a651;color:white;border:none;padding:16px;border-radius:999px;font-size:17px;font-weight:900;margin-top:18px;cursor:pointer}
+.paybtn:disabled{background:#ccc}
+.wabtn{width:100%;background:#25D366;color:white;border:none;padding:16px;border-radius:999px;font-size:17px;font-weight:900;margin-top:10px;cursor:pointer}
+.floating-wa{position:fixed;bottom:20px;right:20px;background:#25D366;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:999}
+#status{margin-top:12px;padding:12px;border-radius:10px;display:none;font-weight:700;text-align:center;font-size:14px}
+.success{background:#d4edda;color:#155724}.error{background:#f8d7da;color:#721c24}.info{background:#fff3cd;color:#856404}
+.footer{background:#0a2a3a;color:white;text-align:center;padding:30px 20px;margin-top:40px}
+.footer a{color:#ffc107;font-weight:800}
+@media(max-width:800px){.hero{grid-template-columns:1fr}.hero h1{font-size:38px}.grid3,.steps,.order{grid-template-columns:1fr}.nav{display:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">💧 PATA <span>MAJI</span><small>KWA VONZA • KITUI</small></div>
+  <div class="nav"><a href="#products">Products</a><a href="#how">How it works</a><a href="#order">Order</a></div>
+  <a href="#order"><button class="btn-yellow">Place an order →</button></a>
+</div>
+<div class="hero">
+  <div>
+    <h1>Pure water,<br><em>right to your door.</em></h1>
+    <p>Fresh, salty, bottled and bulk water in Kwa Vonza. Order in seconds, pay with M-Pesa STK Push, we deliver fast.</p>
+    <a href="#order"><button class="btn-yellow">Place an order →</button></a>
+    <p style="margin-top:16px;font-weight:800">📞 0768814375 &nbsp; • &nbsp; 📍 Kwa Vonza, Kitui</p>
+    <p style="margin-top:6px;font-size:13px">Pay via STK Push - No Till needed</p>
+  </div>
+  <div class="hero-img">💧🚰<br><span style="font-size:18px">Fresh • Clean • Fast</span></div>
+</div>
+<div class="section" id="products">
+  <h2>Water for every kind of day.</h2>
+  <p class="sub">From daily cooking to big events and construction - we have the right water for you.</p>
+  <div class="grid3">
+    <div class="card"><div class="img">🪣</div><div class="pad"><h3>Daily Use - 20L</h3><p>Fresh for drinking & cooking. Salty for cleaning & building.</p><div class="price" id="cardDailyPrice">Loading...</div><div style="font-size:12px;color:#856404;background:#fff3cd;padding:6px 10px;border-radius:999px;display:inline-block;margin-top:8px;font-weight:800" id="cardDailyMin">Min. order: 2 jerrycans</div></div></div>
+    <div class="card"><div class="img">🍶</div><div class="pad"><h3>Bottled Water</h3><p>Clean sealed bottles for home, office and travel.</p><div class="price" id="cardBottledPrice">Loading...</div></div></div>
+    <div class="card"><div class="img">🏺</div><div class="pad"><h3>Water Refill + Bulk</h3><p>Water refill for your dispenser and bulk tanks for homes, schools & events.</p><div class="price" id="cardDispenserPrice">Loading...</div></div></div>
+  </div>
+</div>
+<div class="dark" id="how">
+  <h2>Three steps. Zero stress.</h2>
+  <p>Order, pay with M-Pesa, get delivery in Kwa Vonza.</p>
+  <div class="steps">
+    <div class="step"><b>01</b><h4>Choose your water</h4><p>Pick product and quantity below. Total updates automatically.</p></div>
+    <div class="step"><b>02</b><h4>Pay with STK Push</h4><p>Enter your M-Pesa number. You get a prompt, enter PIN to pay.</p></div>
+    <div class="step"><b>03</b><h4>We deliver</h4><p>We confirm instantly and deliver to your home in Kwa Vonza.</p></div>
+  </div>
+</div>
+<div class="section"><h2>Refreshingly dependable.</h2><p class="sub">Clean water, honest prices, fast delivery. No hidden charges. Pay only what you see.</p></div>
+<div class="section" id="order">
+  <h2>Order water. Pay with M-Pesa.</h2>
+  <p class="sub">Fill this form, pay via STK Push, and we deliver.</p>
+  <div class="order">
+    <div>
+      <div class="tabs">
+        <div class="tab active" data-cat="daily" onclick="showCat('daily',this)">💧 Daily Use</div>
+        <div class="tab" data-cat="bottled" onclick="showCat('bottled',this)">🍶 Bottled</div>
+        <div class="tab" data-cat="refill" onclick="showCat('refill',this)">🏺 Water Refill</div>
+        <div class="tab" data-cat="bulk" onclick="showCat('bulk',this)">🚛 Bulk</div>
+      </div>
+      <div id="cat-daily"><div class="products" id="list-daily"></div><p style="font-size:13px;color:#856404;background:#fff3cd;padding:10px 12px;border-radius:10px;margin-top:10px" id="dailyWarn">⚠️ <b>Daily Use:</b> Minimum order is <b>2 jerrycans</b> (20L).</p></div>
+      <div id="cat-bottled" style="display:none"><div class="products" id="list-bottled"></div></div>
+      <div id="cat-refill" style="display:none"><div class="products" id="list-refill"></div></div>
+      <div id="cat-bulk" style="display:none"><div class="products" id="list-bulk"></div></div>
+      <label>Quantity</label>
+      <input id="qty" type="number" value="2" min="2" oninput="calcTotal()">
+      <p id="qtyHint" style="font-size:12px;color:#888;margin-top:6px">Minimum 2 for Daily Use (20L)</p>
+      <p id="selectedLabel" style="margin-top:10px;font-weight:900;color:#0077cc">Selected: Loading...</p>
+      <p id="totalLabel" style="margin-top:6px;font-size:20px;font-weight:900">Total: KSh 0</p>
+    </div>
+    <div>
+      <label>Your Name</label><input id="custName" placeholder="e.g. Mutua">
+      <label>M-Pesa Number</label><input id="phone" type="tel" placeholder="0768814375" maxlength="10">
+      <label>Located at:</label><input id="location" placeholder="e.g. NDELI">
+      <label>House no:</label><input id="houseNo" placeholder="e.g. H1">
+      <label>Notes (optional)</label><textarea id="notes" rows="2" placeholder="e.g. Near church, blue gate..."></textarea>
+      <input type="hidden" id="amount" value="0">
+      <button id="payBtn" class="paybtn" onclick="pay()">PAY WITH M-PESA 💚 - STK PUSH</button>
+      <button class="wabtn" onclick="orderViaWhatsApp()">💬 ORDER VIA WHATSAPP</button>
+      <div id="status"></div>
+      <p style="text-align:center;font-size:12px;color:#888;margin-top:10px">You will receive STK prompt. Enter M-Pesa PIN to complete.<br>Questions? Call 0768814375</p>
+    </div>
+  </div>
+</div>
+<div class="footer"><h3>💧 PATA MAJI - KWA VONZA</h3><p style="margin:10px 0">Pure water, right to your door.</p><p>📞 <a href="tel:0768814375">0768814375</a> &nbsp; • &nbsp; 📍 Kwa Vonza, Kitui</p><p style="margin-top:10px;font-size:12px;opacity:.7">© 2026 Pata Maji. All rights reserved.</p></div>
+<a class="floating-wa" href="https://wa.me/254768814375?text=Hello%20Pata%20Maji!%20I%20want%20to%20order%20water%20💧" target="_blank">💬</a>
+<script>
+const API = "";
+let adminMinDailyQty = 2, minQty = 2, unitPrice = 30, selectedProduct = "", currentCat = 'daily';
+let allProducts = [];
+function showCat(cat, el){
+  currentCat = cat;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); if(el) el.classList.add('active');
+  ['daily','bottled','refill','bulk'].forEach(c=>{ document.getElementById('cat-'+c).style.display = (c===cat?'block':'none'); });
+  if(cat === 'daily'){ minQty = adminMinDailyQty; document.getElementById('qty').min = adminMinDailyQty; document.getElementById('qtyHint').innerText = 'Minimum ' + adminMinDailyQty + ' for Daily Use (20L)'; }
+  else { minQty = 1; document.getElementById('qty').min = 1; document.getElementById('qtyHint').innerText = 'Minimum 1'; }
+  const qtyEl = document.getElementById('qty'); if(parseInt(qtyEl.value) < minQty) qtyEl.value = minQty;
+  // Auto-select first product in this category
+  const first = allProducts.find(p=>p.cat===cat);
+  if(first) selectPrice(first.price, null, first.name);
+  else calcTotal();
+}
+function renderProducts(){
+  ['daily','bottled','refill','bulk'].forEach(cat=>{
+    const box = document.getElementById('list-'+cat); box.innerHTML='';
+    allProducts.filter(p=>p.cat===cat).forEach((p, idx)=>{
+      const div = document.createElement('div'); div.className='prod' + (p.name===selectedProduct ? ' selected' : '');
+      div.setAttribute('data-name', p.name);
+      div.innerHTML = `<b>KSh ${Number(p.price).toLocaleString()}</b><span>${p.name}</span>` + (cat==='daily' ? `<span class="minLabel" style="font-size:11px;color:#856404;font-weight:800">Min. order: ${adminMinDailyQty} jerrycans</span>` : '');
+      div.onclick = ()=> selectPrice(p.price, div, p.name);
+      box.appendChild(div);
+    });
+    if(!box.innerHTML) box.innerHTML = '<p style="font-size:13px;color:#888">No products in this category yet. Add from Admin.</p>';
+  });
+}
+function selectPrice(amount, el, name){ unitPrice=amount; selectedProduct=name; document.querySelectorAll('.prod').forEach(p=>p.classList.remove('selected')); if(el) el.classList.add('selected'); else { const d=document.querySelector(`.prod[data-name="${CSS.escape(name)}"]`); if(d) d.classList.add('selected'); } calcTotal(); }
+function calcTotal(){
+  const qtyEl = document.getElementById('qty'); let qty = parseInt(qtyEl.value) || minQty; if(qty < minQty){ qty = minQty; qtyEl.value = qty; }
+  const total = unitPrice*qty;
+  document.getElementById('amount').value = total;
+  document.getElementById('selectedLabel').innerText = 'Selected: '+selectedProduct+' x '+qty+' - KSh '+total;
+  document.getElementById('totalLabel').innerText = 'Total: KSh '+total.toLocaleString();
+  return total;
+}
+function showStatus(msg, type){ const s=document.getElementById('status'); s.style.display='block'; s.className=type; s.innerText=msg; }
+async function orderViaWhatsApp(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const loc = document.getElementById('location').value.trim();
+  const houseNo = document.getElementById('houseNo').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  const qty = parseInt(document.getElementById('qty').value)||minQty;
+  const total = calcTotal();
+  if(!name){ showStatus('Please enter your name','error'); return; }
+  if(!phone||phone.length<10){ showStatus('Enter valid M-Pesa number e.g. 0768814375','error'); return; }
+  if(!loc){ showStatus('Please enter where you are located e.g. NDELI','error'); return; }
+  if(!houseNo){ showStatus('Please enter your House no. e.g. H1','error'); return; }
+  try { await fetch(API + '/api/whatsapp-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, location: loc, houseNo, notes, product: selectedProduct, qty, amount: total }) }); } catch(e) {}
+  const message = `Hello Pata Maji Kwa Vonza! 💧%0A%0AI want to order water:%0A%0A👤 Name: ${name}%0A📍 Located at: ${loc}%0A🏠 House No: ${houseNo}%0A📞 Phone: ${phone}%0A💧 Product: ${selectedProduct}%0A🔢 Quantity: ${qty}%0A💰 Total: KSh ${total}%0A${notes ? `📝 Notes: ${notes}%0A` : ''}%0APlease confirm my order.`;
+  window.open(`https://wa.me/254768814375?text=${message}`, '_blank');
+}
+async function pay(){
+  const phone=document.getElementById('phone').value.trim();
+  const amount=calcTotal();
+  const qty=parseInt(document.getElementById('qty').value)||minQty;
+  const name=document.getElementById('custName').value.trim();
+  const loc=document.getElementById('location').value.trim();
+  const houseNo=document.getElementById('houseNo').value.trim();
+  const landmark=document.getElementById('notes').value.trim();
+  const fullAddress = loc + ", House no: " + houseNo + (landmark ? ", Notes: " + landmark : "");
+  const btn=document.getElementById('payBtn');
+  if(!name){ showStatus('Please enter your name','error'); return; }
+  if(!phone||phone.length<10){ showStatus('Enter valid M-Pesa number e.g. 0768814375','error'); return; }
+  if(!loc){ showStatus('Please enter where you are located e.g. NDELI','error'); return; }
+  if(!houseNo){ showStatus('Please enter your House no. e.g. H1','error'); return; }
+  btn.disabled=true; btn.innerText='Sending STK... Please wait...';
+  showStatus('Sending STK to '+phone+'... Check your phone!','info');
+  try{
+    const res=await fetch(API+'/stk-push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,amount,name,location:loc,houseNo,notes:landmark,product:selectedProduct,qty:qty,address:fullAddress})});
+    const data=await res.json();
+    if(data.success){ const checkoutId=data.data.CheckoutRequestID; showStatus('✅ STK Sent! Enter M-Pesa PIN. Waiting...','info'); btn.innerText='WAITING FOR PIN...'; checkPayment(checkoutId,0,fullAddress); }
+    else { showStatus('❌ Failed: '+(data.error?.errorMessage||data.error||'Try again'),'error'); btn.disabled=false; btn.innerText='PAY WITH M-PESA 💚 - STK PUSH'; }
+  }catch(e){ showStatus('❌ Server error. Backend not connected yet. Deploy backend to Render.','error'); btn.disabled=false; btn.innerText='PAY WITH M-PESA 💚 - STK PUSH'; }
+}
+async function checkPayment(checkoutId,tries,fullAddress){
+  const btn=document.getElementById('payBtn');
+  if(tries>12){ showStatus('⏰ Timeout. If you paid, call 0768814375.','error'); btn.disabled=false; btn.innerText='PAY WITH M-PESA 💚 - STK PUSH'; return; }
+  try{
+    const res=await fetch(API+'/api/check-payment/'+checkoutId); const data=await res.json();
+    if(data.status==='PAID'){ showStatus('🎉 PAYMENT CONFIRMED! '+selectedProduct+' - Receipt: '+(data.receipt||'')+' - Delivering to: '+fullAddress+' - Call 0768814375 if needed.','success'); btn.disabled=false; btn.innerText='PAY WITH M-PESA 💚 - STK PUSH'; return; }
+    else if(data.status==='FAILED'){ showStatus('❌ Payment failed / cancelled. Try again.','error'); btn.disabled=false; btn.innerText='PAY WITH M-PESA 💚 - STK PUSH'; return; }
+    else{ showStatus('⏳ Waiting for M-Pesa PIN... ('+(tries+1)+'/12)','info'); setTimeout(()=>checkPayment(checkoutId,tries+1,fullAddress),10000); }
+  }catch(e){ setTimeout(()=>checkPayment(checkoutId,tries+1,fullAddress),10000); }
+}
+async function loadAdminSettings(){
+  try{
+    const r = await fetch('/api/settings'); const d = await r.json(); if(!d.success) return;
+    const s = d.settings; const P = s.prices; const C = s.categories || {};
+    adminMinDailyQty = Number(s.minDailyQty) || 2; minQty = adminMinDailyQty;
+    document.getElementById('qty').min = adminMinDailyQty; document.getElementById('qty').value = adminMinDailyQty;
+    document.getElementById('qtyHint').innerText = 'Minimum ' + adminMinDailyQty + ' for Daily Use (20L)';
+    document.getElementById('cardDailyMin').innerText = 'Min. order: ' + adminMinDailyQty + ' jerrycans';
+    document.getElementById('dailyWarn').innerHTML = '⚠️ <b>Daily Use:</b> Minimum order is <b>' + adminMinDailyQty + ' jerrycans</b> (20L).';
+    allProducts = Object.keys(P).map(name=>({ name, price: P[name], cat: C[name] || 'refill' }));
+    // Top cards - built from Admin too
+    const daily = allProducts.filter(p=>p.cat==='daily');
+    const bottled = allProducts.filter(p=>p.cat==='bottled');
+    const refill = allProducts.filter(p=>p.cat==='refill');
+    const bulk = allProducts.filter(p=>p.cat==='bulk');
+    document.getElementById('cardDailyPrice').innerText = daily.length ? daily.map(p=>p.name.replace('20L ','')+' KSh '+p.price).join(' • ') : 'No Daily products yet';
+    document.getElementById('cardBottledPrice').innerText = bottled.length ? bottled.map(p=>p.name+' KSh '+p.price).join(' • ') : 'No Bottled products yet';
+    document.getElementById('cardDispenserPrice').innerHTML = (refill.length ? refill.map(p=>p.name+' KSh '+p.price).join(' • ') : '') + (bulk.length ? '<br>Bulk: ' + bulk.map(p=>p.name+' KSh '+p.price).join(' • ') : '');
+    renderProducts();
+    // Select first daily product by default
+    const first = allProducts.find(p=>p.cat==='daily') || allProducts[0];
+    if(first){ unitPrice = first.price; selectedProduct = first.name; }
+    calcTotal(); renderProducts();
+  }catch(e){ document.getElementById('cardDailyPrice').innerText='Cannot load prices - check server'; }
+}
+loadAdminSettings();
+</script>
+</body>
+</html>
