@@ -52,7 +52,6 @@ td{padding:10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
 canvas{width:100%;max-height:220px}
 #loginBox{max-width:400px;margin:80px auto;background:white;padding:25px;border-radius:14px;text-align:center}
 #loginBox input{width:100%;padding:12px;margin:12px 0;border:2px solid #ddd;border-radius:10px}
-/* SETTINGS - FULLY AUTOMATIC: name + category + price */
 .set-row{display:grid;grid-template-columns:1fr 110px 90px 36px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0}
 .set-row input,.set-row select{padding:11px;border:2px solid #eee;border-radius:10px;font-size:14px;width:100%}
 .set-row input.name-input{font-weight:700}
@@ -60,6 +59,8 @@ canvas{width:100%;max-height:220px}
 .btn-add{background:#0a3442;color:white;border:none;padding:12px 16px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:12px;width:100%}
 #saveMsg{padding:12px;border-radius:10px;display:none;text-align:center;font-weight:800;margin-top:12px}
 #saveMsg.ok{background:#d4edda;color:#155724;display:block}#saveMsg.err{background:#f8d7da;color:#721c24;display:block}
+#newAlert{display:none;background:#ffcc00;color:#000;text-align:center;padding:14px;font-weight:900;font-size:18px;border-radius:12px;margin-bottom:12px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0.5}}
 @media(max-width:900px){.sidebar{display:none}.stats,.grid2,.grid3,.grid2b{grid-template-columns:1fr}.set-row{grid-template-columns:1fr 90px 70px 32px}}
 </style>
 </head>
@@ -73,8 +74,8 @@ canvas{width:100%;max-height:220px}
   <div class="side-item" onclick="showView('settings',this)">⚙️ Settings - Change Prices</div>
   <div class="logout" onclick="logout()">↩ Log Out</div>
 </div>
-
 <div class="main">
+<div id="newAlert">🔔 NEW ORDER! 🔔 NEW MONEY!</div>
   <div id="loginBox" style="display:none">
     <h2>💧 Pata Maji Admin</h2>
     <p style="color:#888;font-size:13px;margin-top:6px">Enter admin password</p>
@@ -82,13 +83,11 @@ canvas{width:100%;max-height:220px}
     <button onclick="login()" style="width:100%;background:#0a3442;color:white;padding:12px;border:none;border-radius:10px;font-weight:900;cursor:pointer">Login</button>
     <p id="loginErr" style="color:red;font-size:13px;margin-top:8px"></p>
   </div>
-
   <div id="adminMain">
     <div class="topbar">
       <div class="search">🔍 <input id="search" placeholder="Search Anything - name, phone, product..." oninput="filterTable()"></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><span>🔔</span><div class="avatar">A</div><b class="admin-name">Amos • Kwa Vonza</b></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><button onclick="testBeep()" style="padding:8px 12px;background:#0077cc;color:white;border:none;border-radius:999px;font-weight:800;cursor:pointer">🔊 TEST SOUND</button><span>🔔</span><div class="avatar">A</div><b class="admin-name">Amos • Kwa Vonza</b></div>
     </div>
-
     <div id="view-dashboard">
       <h1>Dashboard</h1>
       <div class="stats">
@@ -121,7 +120,6 @@ canvas{width:100%;max-height:220px}
         <div class="card"><h3>Marketing Performance</h3><p style="font-size:14px">STK Orders &nbsp; <b id="stkCount">0</b> &nbsp;&nbsp; WhatsApp Orders &nbsp; <b id="waCount">0</b></p><canvas id="marketChart" height="140"></canvas></div>
       </div>
     </div>
-
     <div id="view-orders" style="display:none">
       <h1>Order Management</h1>
       <div class="card">
@@ -138,7 +136,6 @@ canvas{width:100%;max-height:220px}
         </div>
       </div>
     </div>
-
     <div id="view-settings" style="display:none">
       <h1>⚙️ Settings - Change Names, Prices & Category</h1>
       <p style="color:#555;margin-bottom:14px">Tap <b>name</b> to rename, pick <b>category</b>, change <b>price</b>, delete with ✕, or add new. Click SAVE. Website updates itself automatically.</p>
@@ -156,11 +153,20 @@ canvas{width:100%;max-height:220px}
     </div>
   </div>
 </div>
-
 <script>
 const myToken = localStorage.getItem('patamaji_admin_token');
 let allPayments = [];
 let adminSettings = null;
+// --- NOTIFICATION BEEP ---
+let lastOrderCount = 0; let firstAdminLoad = true;
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<3;i++){ const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; o.type='sine'; g.gain.setValueAtTime(0.5, ctx.currentTime + i*0.4); o.start(ctx.currentTime + i*0.4); o.stop(ctx.currentTime + i*0.4 + 0.3); }
+    if(navigator.vibrate) navigator.vibrate([500,200,500,200,500]);
+  }catch(e){}
+}
+function testBeep(){ playBeep(); alert('✅ Sound ON! Leave this page open.'); }
 function checkLogin(){
   if(!myToken){ document.getElementById('loginBox').style.display='block'; document.getElementById('adminMain').style.display='none'; document.getElementById('sidebar').style.display='none'; }
   else { document.getElementById('loginBox').style.display='none'; document.getElementById('adminMain').style.display='block'; }
@@ -232,6 +238,12 @@ async function loadData(){
     if(res.status===401){ localStorage.removeItem('patamaji_admin_token'); location.href='/admin-login'; return; }
     const data = await res.json();
     allPayments = data.payments || [];
+    if(!firstAdminLoad && allPayments.length > lastOrderCount){
+      document.getElementById('newAlert').style.display='block';
+      playBeep();
+      setTimeout(()=>{ document.getElementById('newAlert').style.display='none'; }, 10000);
+    }
+    lastOrderCount = allPayments.length; firstAdminLoad = false;
     renderDashboard(data.stats || {});
     renderTable(allPayments);
   }catch(e){ document.getElementById('tableBody').innerHTML='<tr><td colspan="9">❌ Cannot connect</td></tr>'; }
