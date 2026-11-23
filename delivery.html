@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery - Pata Maji Kwa Vonza</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f6fbfc;color:#0a2a3a;padding:16px}
+.top{max-width:600px;margin:0 auto;text-align:center;padding:10px}
+.top h1{font-size:24px}.top p{color:#666;font-size:13px;margin-top:4px}
+.login{max-width:400px;margin:30px auto;background:white;padding:25px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,.08);text-align:center}
+.login h2{margin-bottom:12px}
+input{width:100%;padding:13px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;margin-top:8px}
+button{width:100%;background:#00a651;color:white;border:none;padding:14px;border-radius:999px;font-size:16px;font-weight:900;margin-top:14px;cursor:pointer}
+button.grey{background:#0a2a3a}
+.orders{max-width:600px;margin:15px auto;display:none}
+.card{background:white;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.06);border-left:6px solid #00a651}
+.card.delivered{border-left-color:#ccc;opacity:.6}
+.card h3{font-size:18px;margin-bottom:8px}
+.card p{font-size:14px;line-height:1.7;color:#333}
+.card b{color:#0a2a3a}
+.badge{background:#d4edda;color:#155724;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900}
+.badge.pending{background:#fff3cd;color:#856404}
+.small{font-size:12px;color:#888;margin-top:8px}
+.topbar{display:flex;justify-content:space-between;align-items:center;max-width:600px;margin:0 auto}
+.refresh{background:#0077cc;color:white;border:none;padding:10px 16px;border-radius:999px;font-weight:800;cursor:pointer;width:auto}
+#status{text-align:center;margin:10px;font-weight:700;font-size:13px;color:#666}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>💧 PATA MAJI - DELIVERY</h1>
+  <p>Kwa Vonza • 0768814375</p>
+</div>
+
+<!-- LOGIN -->
+<div id="loginBox" class="login">
+  <h2>Delivery Login</h2>
+  <p style="font-size:13px;color:#666">Enter delivery password</p>
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">LOGIN →</button>
+  <p id="loginErr" style="color:red;font-size:13px;margin-top:10px;display:none">Wrong password. Ask boss.</p>
+  <p style="font-size:12px;color:#999;margin-top:12px">Default password: 1234</p>
+</div>
+
+<!-- ORDERS -->
+<div id="ordersBox" style="display:none">
+  <div class="topbar">
+    <b id="countLabel">0 Orders</b>
+    <button class="refresh" onclick="loadOrders()">🔄 Refresh</button>
+  </div>
+  <p id="status">Loading orders...</p>
+  <div id="list" class="orders" style="display:block"></div>
+  <div style="max-width:600px;margin:0 auto">
+    <button class="grey" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<script>
+// *** PUT YOUR RENDER BACKEND URL HERE - SAME AS index.html ***
+const API = "";
+// Password - change 1234 to anything you want
+const DELIVERY_PASSWORD = "1234";
+
+function login(){
+  const p = document.getElementById('pass').value;
+  if(p === DELIVERY_PASSWORD){
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('ordersBox').style.display='block';
+    loadOrders();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+function logout(){
+  document.getElementById('loginBox').style.display='block';
+  document.getElementById('ordersBox').style.display='none';
+  document.getElementById('pass').value='';
+}
+
+async function loadOrders(){
+  const list = document.getElementById('list');
+  const status = document.getElementById('status');
+  status.innerText = 'Loading orders...';
+  try{
+    // Try backend first
+    const res = await fetch(API + '/api/orders');
+    const data = await res.json();
+    // Backend returns array OR {orders: [...]}
+    const orders = Array.isArray(data) ? data : (data.orders || []);
+    if(orders.length === 0){
+      status.innerText = 'No orders yet. Pull to refresh.';
+      list.innerHTML = '';
+      document.getElementById('countLabel').innerText = '0 Orders';
+      return;
+    }
+    renderOrders(orders);
+  }catch(e){
+    // Demo if backend not connected - so you can see design in VS Code
+    status.innerText = '⚠️ Backend not connected yet. Showing demo order:';
+    renderOrders([
+      {name:'Mutua', phone:'0768814375', product:'20L Fresh Water', qty:2, amount:60, location:'NDELI', houseNo:'H1', notes:'Blue gate, near church', receipt:'QK123456', status:'PAID'},
+      {name:'Kamau', phone:'0712345678', product:'500ml Bottled', qty:5, amount:150, location:'KWA VONZA MARKET', houseNo:'H5', notes:'Opposite shop', receipt:'QK789012', status:'PAID'}
+    ]);
+  }
+}
+
+function renderOrders(orders){
+  const list = document.getElementById('list');
+  const status = document.getElementById('status');
+  // Show PAID first, then others
+  const active = orders.filter(o => (o.status||'PAID') !== 'DELIVERED');
+  document.getElementById('countLabel').innerText = active.length + ' To Deliver • ' + orders.length + ' Total';
+  status.innerText = active.length === 0 ? '🎉 All delivered!' : 'Tap CALL to call customer, tap DELIVERED when done.';
+  list.innerHTML = orders.map((o,i)=>{
+    const isDone = (o.status === 'DELIVERED');
+    return `
+    <div class="card ${isDone ? 'delivered':''}" id="card-${i}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3>${o.name || 'Customer'} - ${o.product || ''} x ${o.qty || 1}</h3>
+        <span class="badge ${isDone ? '':'pending'}">${isDone ? 'DELIVERED':'TO DELIVER'}</span>
+      </div>
+      <p>
+        <b>📍 Located at:</b> ${o.location || o.address || 'NDELI'}<br>
+        <b>🏠 House no:</b> ${o.houseNo || '-'}<br>
+        <b>📝 Notes:</b> ${o.notes || '-'}<br>
+        <b>💰 Amount:</b> KSh ${(o.amount||0).toLocaleString()} &nbsp; • &nbsp; <b>Receipt:</b> ${o.receipt || o.checkoutId || '-'}<br>
+        <b>📞 Phone:</b> ${o.phone || ''}
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <a href="tel:${o.phone}"><button style="margin:0;background:#0077cc">📞 CALL</button></a>
+        <button style="margin:0;${isDone ? 'background:#ccc':''}" onclick="markDone(${i}, '${o.receipt||o.checkoutId||i}')" ${isDone ? 'disabled':''}>${isDone ? '✅ DONE':'✅ MARK DELIVERED'}</button>
+      </div>
+      <p class="small">Order ID: ${o.checkoutId || o.receipt || i}</p>
+    </div>`;
+  }).join('');
+}
+
+async function markDone(i, id){
+  if(!confirm('Mark this as DELIVERED?')) return;
+  document.getElementById('card-'+i).classList.add('delivered');
+  // Try to update backend
+  try{ await fetch(API + '/api/orders/' + id + '/delivered', {method:'POST'}); }catch(e){}
+  alert('✅ Marked delivered!');
+  loadOrders();
+}
+
+// Allow Enter key to login
+document.getElementById('pass').addEventListener('keypress', e=>{ if(e.key==='Enter') login(); });
+</script>
+</body>
+</html>
