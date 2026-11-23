@@ -26,26 +26,25 @@ button.grey{background:#0a2a3a}
 .topbar{display:flex;justify-content:space-between;align-items:center;max-width:600px;margin:0 auto}
 .refresh{background:#0077cc;color:white;border:none;padding:10px 16px;border-radius:999px;font-weight:800;cursor:pointer;width:auto}
 #status{text-align:center;margin:10px;font-weight:700;font-size:13px;color:#666}
+#newAlert{display:none;background:#ffcc00;color:#000;text-align:center;padding:14px;font-weight:900;font-size:18px;border-radius:12px;max-width:600px;margin:10px auto;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0.5}}
 </style>
 </head>
 <body>
-
 <div class="top">
   <h1>💧 PATA MAJI - DELIVERY</h1>
-  <p>Kwa Vonza • 0768814375</p>
+  <p>Kwa Vonza • 0768814375 • Auto-refresh ON 🔊</p>
 </div>
-
-<!-- LOGIN -->
+<div id="newAlert">🔔 NEW ORDER! 🔔 SCROLL DOWN</div>
 <div id="loginBox" class="login">
   <h2>Delivery Login</h2>
   <p style="font-size:13px;color:#666">Enter delivery password</p>
   <input id="pass" type="password" placeholder="Password">
   <button onclick="login()">LOGIN →</button>
   <p id="loginErr" style="color:red;font-size:13px;margin-top:10px;display:none">Wrong password. Ask boss.</p>
-  <p style="font-size:12px;color:#999;margin-top:12px">Default password: 1234</p>
+  <button onclick="testBeep()" style="background:#0077cc">🔊 TEST SOUND</button>
+  <p style="font-size:12px;color:#999;margin-top:8px">Tap TEST SOUND once to allow beep. Default password: 1234</p>
 </div>
-
-<!-- ORDERS -->
 <div id="ordersBox" style="display:none">
   <div class="topbar">
     <b id="countLabel">0 Orders</b>
@@ -57,63 +56,56 @@ button.grey{background:#0a2a3a}
     <button class="grey" onclick="logout()">Logout</button>
   </div>
 </div>
-
 <script>
-// *** PUT YOUR RENDER BACKEND URL HERE - SAME AS index.html ***
 const API = "";
-// Password - change 1234 to anything you want
 const DELIVERY_PASSWORD = "1234";
-
+let lastCount = 0; let firstLoad = true;
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<3;i++){ const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; o.type='sine'; g.gain.setValueAtTime(0.5, ctx.currentTime + i*0.4); o.start(ctx.currentTime + i*0.4); o.stop(ctx.currentTime + i*0.4 + 0.3); }
+    if(navigator.vibrate) navigator.vibrate([500,200,500,200,500]);
+  }catch(e){}
+}
+function testBeep(){ playBeep(); alert('✅ Sound ON! Leave this page open.'); }
 function login(){
   const p = document.getElementById('pass').value;
   if(p === DELIVERY_PASSWORD){
     document.getElementById('loginBox').style.display='none';
     document.getElementById('ordersBox').style.display='block';
     loadOrders();
-  } else {
-    document.getElementById('loginErr').style.display='block';
-  }
+    setInterval(loadOrders, 30000);
+  } else { document.getElementById('loginErr').style.display='block'; }
 }
-function logout(){
-  document.getElementById('loginBox').style.display='block';
-  document.getElementById('ordersBox').style.display='none';
-  document.getElementById('pass').value='';
-}
-
+function logout(){ location.reload(); }
 async function loadOrders(){
   const list = document.getElementById('list');
   const status = document.getElementById('status');
-  status.innerText = 'Loading orders...';
   try{
-    // Try backend first
     const res = await fetch(API + '/api/orders');
     const data = await res.json();
-    // Backend returns array OR {orders: [...]}
     const orders = Array.isArray(data) ? data : (data.orders || []);
+    if(!firstLoad && orders.length > lastCount){
+      document.getElementById('newAlert').style.display='block';
+      playBeep();
+      setTimeout(()=>{ document.getElementById('newAlert').style.display='none'; }, 10000);
+    }
+    lastCount = orders.length; firstLoad = false;
     if(orders.length === 0){
-      status.innerText = 'No orders yet. Pull to refresh.';
+      status.innerText = 'No orders yet. Auto-checking every 30 sec...';
       list.innerHTML = '';
       document.getElementById('countLabel').innerText = '0 Orders';
       return;
     }
     renderOrders(orders);
-  }catch(e){
-    // Demo if backend not connected - so you can see design in VS Code
-    status.innerText = '⚠️ Backend not connected yet. Showing demo order:';
-    renderOrders([
-      {name:'Mutua', phone:'0768814375', product:'20L Fresh Water', qty:2, amount:60, location:'NDELI', houseNo:'H1', notes:'Blue gate, near church', receipt:'QK123456', status:'PAID'},
-      {name:'Kamau', phone:'0712345678', product:'500ml Bottled', qty:5, amount:150, location:'KWA VONZA MARKET', houseNo:'H5', notes:'Opposite shop', receipt:'QK789012', status:'PAID'}
-    ]);
-  }
+  }catch(e){ status.innerText = '⚠️ Cannot load orders. Retrying in 30 sec...'; }
 }
-
 function renderOrders(orders){
   const list = document.getElementById('list');
   const status = document.getElementById('status');
-  // Show PAID first, then others
   const active = orders.filter(o => (o.status||'PAID') !== 'DELIVERED');
   document.getElementById('countLabel').innerText = active.length + ' To Deliver • ' + orders.length + ' Total';
-  status.innerText = active.length === 0 ? '🎉 All delivered!' : 'Tap CALL to call customer, tap DELIVERED when done.';
+  status.innerText = active.length === 0 ? '🎉 All delivered! Auto-checking...' : '🔊 Leave page open - it will BEEP on new order. Tap CALL to call customer, tap DELIVERED when done.';
   list.innerHTML = orders.map((o,i)=>{
     const isDone = (o.status === 'DELIVERED');
     return `
@@ -137,17 +129,13 @@ function renderOrders(orders){
     </div>`;
   }).join('');
 }
-
 async function markDone(i, id){
   if(!confirm('Mark this as DELIVERED?')) return;
   document.getElementById('card-'+i).classList.add('delivered');
-  // Try to update backend
   try{ await fetch(API + '/api/orders/' + id + '/delivered', {method:'POST'}); }catch(e){}
   alert('✅ Marked delivered!');
   loadOrders();
 }
-
-// Allow Enter key to login
 document.getElementById('pass').addEventListener('keypress', e=>{ if(e.key==='Enter') login(); });
 </script>
 </body>
