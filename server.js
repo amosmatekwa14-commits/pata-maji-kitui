@@ -39,28 +39,19 @@ function guessCat(name){
   return 'refill';
 }
 let SETTINGS = {
-  minDailyQty: 2,
+  minDailyQty: 3,
   prices: {
     '20L Fresh Water': 30,
     '20L Salty Water': 25,
     '20L Refill': 150,
     '20L Bottle + Water Refill': 850,
-    '10L Refill': 90,
-    '10L Soft Bottle + Water Refill': 150,
+    '10L Refill': 100,
+    '10L Soft Bottle + Water Refill': 220,
     '10L Hard Bottle + Water Refill': 440,
     '24 Pack 500ml Bottled': 400,
-    '1000L Bulk': 1000,
-    '1000L Bowser': 1000,
-    '5000L Bulk': 3000,
-    '5000L Bowser': 3000,
-    '10000L Bulk': 6000,
-    '10000L Bowser': 6000,
-    '500ml Bottled': 30,
-    '1L Bottled': 40,
-    '1.5L Bottled': 60,
-    '4.5L Water Refill': 100,
-    '10L Water Refill': 200,
-    '19L Water Refill': 300,
+    '5000L Bulk (Charged Based on Distance)': 3000,
+    '6000L Bulk (Charged Based on Distance)': 4500,
+    '10000L Bulk (Charged Based on Distance)': 6500,
   },
   categories: {
     '20L Fresh Water': 'daily',
@@ -71,18 +62,9 @@ let SETTINGS = {
     '10L Soft Bottle + Water Refill': 'refill',
     '10L Hard Bottle + Water Refill': 'refill',
     '24 Pack 500ml Bottled': 'bottled',
-    '1000L Bulk': 'bulk',
-    '1000L Bowser': 'bulk',
-    '5000L Bulk': 'bulk',
-    '5000L Bowser': 'bulk',
-    '10000L Bulk': 'bulk',
-    '10000L Bowser': 'bulk',
-    '500ml Bottled': 'bottled',
-    '1L Bottled': 'bottled',
-    '1.5L Bottled': 'bottled',
-    '4.5L Water Refill': 'refill',
-    '10L Water Refill': 'refill',
-    '19L Water Refill': 'refill',
+    '5000L Bulk (Charged Based on Distance)': 'bulk',
+    '6000L Bulk (Charged Based on Distance)': 'bulk',
+    '10000L Bulk (Charged Based on Distance)': 'bulk',
   }
 };
 try{
@@ -147,7 +129,7 @@ function checkAdmin(req, res, next){
 async function getToken() {
   const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
   const res = await axios.get(`${BASE_URL}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${auth}` }
+    headers: { Authorization: `Bearer ${token}` }
   });
   return res.data.access_token;
 }
