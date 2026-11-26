@@ -157,7 +157,6 @@ canvas{width:100%;max-height:220px}
 const myToken = localStorage.getItem('patamaji_admin_token');
 let allPayments = [];
 let adminSettings = null;
-// --- NOTIFICATION BEEP ---
 let lastOrderCount = 0; let firstAdminLoad = true;
 function playBeep(){
   try{
@@ -198,8 +197,17 @@ function addPriceRow(name, price, cat){
   const list = document.getElementById('priceList');
   const div = document.createElement('div'); div.className='set-row';
   const c = cat || guessCat(name);
-  div.innerHTML = `<input class="name-input" data-name-input value="${name.replace(/"/g,'&quot;')}"><select data-cat-input><option value="daily" ${c==='daily'?'selected':''}>💧 Daily</option><option value="bottled" ${c==='bottled'?'selected':''}>🍶 Bottled</option><option value="refill" ${c==='refill'?'selected':''}>🏺 Water Refill</option><option value="bulk" ${c==='bulk'?'selected':''}>🚛 Bulk</option></select><input type="number" data-price-input value="${price}"><button class="btn-del-row" onclick="this.parentElement.remove()">✕</button>`;
+  div.innerHTML = `<input class="name-input" data-name-input value="${name.replace(/"/g,'&quot;')}"><select data-cat-input><option value="daily" ${c==='daily'?'selected':''}>💧 Daily</option><option value="bottled" ${c==='bottled'?'selected':''}>🍶 Bottled</option><option value="refill" ${c==='refill'?'selected':''}>🏺 Water Refill</option><option value="bulk" ${c==='bulk'?'selected':''}>🚛 Bulk</option></select><input type="number" data-price-input value="${price}"><button class="btn-del-row" onclick="deleteRow(this)">✕</button>`;
   list.appendChild(div);
+}
+function deleteRow(btn){
+  const row = btn.parentElement;
+  const name = row.querySelector('[data-name-input]').value;
+  if(!confirm('Permanently delete "' + name + '"?\nThis cannot be undone. Click SAVE after.')) return;
+  row.remove();
+  const m = document.getElementById('saveMsg');
+  m.className='ok'; m.style.display='block';
+  m.innerText='⚠️ "' + name + '" removed. Now click SAVE ALL CHANGES to make it permanent.';
 }
 function addProduct(){ addPriceRow('New Product', 100, 'refill'); }
 async function loadSettings(){
@@ -225,12 +233,20 @@ async function saveSettings(){
   if(hasEmpty){ m.className='err'; m.style.display='block'; m.innerText='❌ Product name cannot be empty.'; return; }
   if(Object.keys(prices).length===0){ m.className='err'; m.style.display='block'; m.innerText='❌ Add at least 1 product.'; return; }
   const minDailyQty = Number(document.getElementById('minDailyQty').value);
+  m.className='ok'; m.style.display='block'; m.innerText='⏳ Saving... Do not close...';
   try{
     const res = await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json','x-admin-token':myToken},body:JSON.stringify({minDailyQty,prices,categories})});
     const d = await res.json();
-    if(d.success){ m.className='ok'; m.style.display='block'; m.innerText='✅ Saved! Website updated automatically.'; loadSettings(); }
-    else { m.className='err'; m.style.display='block'; m.innerText='❌ Failed. Login again.'; }
-  }catch(e){ m.className='err'; m.style.display='block'; m.innerText='❌ Server error.'; }
+    if(!d.success){ m.className='err'; m.innerText='❌ NOT SAVED. Login again.'; return; }
+    const check = await fetch('/api/settings'); const cd = await check.json();
+    const stillThere = Object.keys(cd.settings.prices).filter(n => !prices[n]);
+    if(stillThere.length > 0){
+      m.className='err'; m.innerText='❌ Server did NOT save delete: ' + stillThere.join(', ') + ' still there. Backend disk problem.';
+      return;
+    }
+    m.className='ok'; m.innerText='✅ PERMANENTLY DELETED! Verified on server. Website updated.';
+    loadSettings();
+  }catch(e){ m.className='err'; m.innerText='❌ Server error. Not saved.'; }
 }
 async function loadData(){
   try{
