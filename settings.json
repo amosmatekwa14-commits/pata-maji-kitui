@@ -1,0 +1,29 @@
+{
+  "minDailyQty": 3,
+  "prices": {
+    "20L Fresh Water": 30,
+    "20L Salty Water": 25,
+    "20L Refill": 150,
+    "20L Bottle + Water Refill": 850,
+    "10L Refill": 100,
+    "10L Soft Bottle + Water Refill": 220,
+    "10L Hard Bottle + Water Refill": 440,
+    "24 Pack 500ml Bottled": 400,
+    "5000L Bulk (Charged Based on Distance)": 3000,
+    "6000L Bulk (Charged Based on Distance)": 4500,
+    "10000L Bulk (Charged Based on Distance)": 6500
+  },
+  "categories": {
+    "20L Fresh Water": "daily",
+    "20L Salty Water": "daily",
+    "20L Refill": "refill",
+    "20L Bottle + Water Refill": "refill",
+    "10L Refill": "refill",
+    "10L Soft Bottle + Water Refill": "refill",
+    "10L Hard Bottle + Water Refill": "refill",
+    "24 Pack 500ml Bottled": "bottled",
+    "5000L Bulk (Charged Based on Distance)": "bulk",
+    "6000L Bulk (Charged Based on Distance)": "bulk",
+    "10000L Bulk (Charged Based on Distance)": "bulk"
+  }
+}
