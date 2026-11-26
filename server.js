@@ -20,15 +20,16 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Kitui123";
 const BASE_URL = "https://api.safaricom.co.ke";
 
-// --- GITHUB SYNC - makes Admin delete PERMANENT on Free Render ---
-// Set these 2 in Render > Environment:
-// GITHUB_TOKEN = your GitHub Personal Access Token (contents: write)
-// GITHUB_REPO = yourusername/pata-maji-kitui  e.g. amos123/pata-maji-kitui
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 const GITHUB_REPO = process.env.GITHUB_REPO || "";
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main";
 
 let adminToken = null;
+
+// --- DELIVERY PERSONS ---
+let DELIVERY_PERSONS = [
+  { id: 1, name: "Shinab Kipsoi", phone: "254114403276", pin: "3276", area: "Kwa Vonza", active: true }
+];
 
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
 function guessCat(name){
@@ -76,7 +77,6 @@ try{
   }
 }catch(e){}
 
-// Push settings.json to GitHub so it survives Render restart on Free plan
 async function pushSettingsToGitHub(){
   if(!GITHUB_TOKEN || !GITHUB_REPO) return { ok:false, reason:'no-github-token' };
   try{
@@ -155,6 +155,28 @@ async function querySTK(checkoutId) {
 
 app.get('/api/settings', (req, res) => res.json({ success: true, settings: SETTINGS }));
 app.get('/api/prices', (req, res) => res.json({ success: true, prices: SETTINGS.prices }));
+
+// --- DELIVERY ENDPOINTS ---
+app.post('/api/delivery/login', (req, res) => {
+  const phone = String(req.body.phone || '').replace(/[^0-9]/g, '').replace(/^0/, '254');
+  const pin = String(req.body.pin || '');
+  const person = DELIVERY_PERSONS.find(p => p.phone === phone && p.pin === pin && p.active);
+  if(!person) return res.status(401).json({ success: false, error: "Wrong phone or PIN" });
+  res.json({ success: true, person: { id: person.id, name: person.name, phone: person.phone, area: person.area } });
+});
+app.get('/api/delivery-persons', (req, res) => res.json({ success: true, persons: DELIVERY_PERSONS }));
+app.post('/api/delivery-persons', checkAdmin, (req, res) => {
+  const { name, phone, pin, area } = req.body;
+  const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').replace(/^0/, '254');
+  const p = { id: Date.now(), name, phone: cleanPhone, pin: String(pin), area: area || '', active: true };
+  DELIVERY_PERSONS.push(p);
+  res.json({ success: true, person: p });
+});
+app.post('/api/delivery-persons/:id/toggle', checkAdmin, (req, res) => {
+  const p = DELIVERY_PERSONS.find(x => String(x.id) === String(req.params.id));
+  if(p) p.active = !p.active;
+  res.json({ success: true, person: p });
+});
 
 app.post('/api/admin/settings', checkAdmin, async (req, res) => {
   const { minDailyQty, prices, categories } = req.body;
@@ -313,7 +335,7 @@ app.post('/api/orders/:id/delivered', (req, res) => {
   const id = req.params.id;
   const pay = payments.find(p=> String(p.checkoutId)===String(id) || String(p.receipt)===String(id) || String(p.id)===String(id));
   if(!pay) return res.json({success:false, message:'Order not found'});
-  pay.status = 'DELIVERED'; pay.deliveredAt = new Date().toISOString(); savePayments();
+  pay.status = 'DELIVERED'; pay.deliveredAt = new Date().toISOString(); pay.deliveredBy = req.body?.deliveredBy || pay.deliveredBy || ''; savePayments();
   res.json({success:true, order: pay});
 });
 app.post('/api/test-order', (req,res)=>{
