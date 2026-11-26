@@ -81,7 +81,6 @@ async function pushSettingsToGitHub(){
   if(!GITHUB_TOKEN || !GITHUB_REPO) return { ok:false, reason:'no-github-token' };
   try{
     const content = Buffer.from(JSON.stringify(SETTINGS,null,2)).toString('base64');
-    // Get current SHA if file exists on GitHub
     let sha = null;
     try{
       const getRes = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/settings.json?ref=${GITHUB_BRANCH}`, { headers:{ Authorization:`Bearer ${GITHUB_TOKEN}`, Accept:'application/vnd.github+json' } });
@@ -129,7 +128,7 @@ function checkAdmin(req, res, next){
 async function getToken() {
   const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
   const res = await axios.get(`${BASE_URL}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Basic ${auth}` }
   });
   return res.data.access_token;
 }
@@ -165,7 +164,6 @@ app.post('/api/admin/settings', checkAdmin, async (req, res) => {
   Object.keys(SETTINGS.prices).forEach(n=>{ if(!SETTINGS.categories[n]) SETTINGS.categories[n] = guessCat(n); });
   Object.keys(SETTINGS.categories).forEach(n=>{ if(!SETTINGS.prices[n]) delete SETTINGS.categories[n]; });
   saveSettings();
-  // Wait for GitHub push so delete is permanent
   const pushed = await pushSettingsToGitHub();
   res.json({ success: true, settings: SETTINGS, githubSaved: pushed.ok });
 });
