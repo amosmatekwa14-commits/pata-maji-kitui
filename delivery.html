@@ -33,17 +33,18 @@ button.grey{background:#0a2a3a}
 <body>
 <div class="top">
   <h1>💧 PATA MAJI - DELIVERY</h1>
-  <p>Kwa Vonza • 0768814375 • Auto-refresh ON 🔊</p>
+  <p id="whoLabel">Kwa Vonza • 0768814375 • Auto-refresh ON 🔊</p>
 </div>
 <div id="newAlert">🔔 NEW ORDER! 🔔 SCROLL DOWN</div>
 <div id="loginBox" class="login">
   <h2>Delivery Login</h2>
-  <p style="font-size:13px;color:#666">Enter delivery password</p>
-  <input id="pass" type="password" placeholder="Password">
+  <p style="font-size:13px;color:#666">Use your phone + PIN given by boss</p>
+  <input id="dPhone" type="tel" placeholder="Phone e.g. 0114403276">
+  <input id="dPin" type="password" placeholder="PIN e.g. 3276" inputmode="numeric">
   <button onclick="login()">LOGIN →</button>
-  <p id="loginErr" style="color:red;font-size:13px;margin-top:10px;display:none">Wrong password. Ask boss.</p>
+  <p id="loginErr" style="color:red;font-size:13px;margin-top:10px;display:none">Wrong phone or PIN. Call boss.</p>
   <button onclick="testBeep()" style="background:#0077cc">🔊 TEST SOUND</button>
-  <p style="font-size:12px;color:#999;margin-top:8px">Tap TEST SOUND once to allow beep. Default password: 1234</p>
+  <p style="font-size:12px;color:#999;margin-top:8px">Tap TEST SOUND once to allow beep.</p>
 </div>
 <div id="ordersBox" style="display:none">
   <div class="topbar">
@@ -58,8 +59,8 @@ button.grey{background:#0a2a3a}
 </div>
 <script>
 const API = "";
-const DELIVERY_PASSWORD = "1234";
-let lastCount = 0; let firstLoad = true;
+let currentPerson = null;
+let lastCount = 0; let firstLoad = true; let beepEnabled = false;
 function playBeep(){
   try{
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
@@ -67,17 +68,25 @@ function playBeep(){
     if(navigator.vibrate) navigator.vibrate([500,200,500,200,500]);
   }catch(e){}
 }
-function testBeep(){ playBeep(); alert('✅ Sound ON! Leave this page open.'); }
-function login(){
-  const p = document.getElementById('pass').value;
-  if(p === DELIVERY_PASSWORD){
+function testBeep(){ beepEnabled=true; playBeep(); alert('✅ Sound ON! Leave this page open.'); }
+async function login(){
+  const phone = document.getElementById('dPhone').value.trim();
+  const pin = document.getElementById('dPin').value.trim();
+  if(!phone || !pin){ document.getElementById('loginErr').style.display='block'; return; }
+  try{
+    const res = await fetch(API + '/api/delivery/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ phone, pin }) });
+    const data = await res.json();
+    if(!data.success){ document.getElementById('loginErr').style.display='block'; return; }
+    currentPerson = data.person;
+    localStorage.setItem('pata_delivery', JSON.stringify(currentPerson));
+    document.getElementById('whoLabel').innerText = '👋 ' + currentPerson.name + ' • ' + currentPerson.area + ' • Auto-refresh ON 🔊';
     document.getElementById('loginBox').style.display='none';
     document.getElementById('ordersBox').style.display='block';
     loadOrders();
     setInterval(loadOrders, 30000);
-  } else { document.getElementById('loginErr').style.display='block'; }
+  }catch(e){ document.getElementById('loginErr').style.display='block'; }
 }
-function logout(){ location.reload(); }
+function logout(){ localStorage.removeItem('pata_delivery'); location.reload(); }
 async function loadOrders(){
   const list = document.getElementById('list');
   const status = document.getElementById('status');
@@ -119,7 +128,8 @@ function renderOrders(orders){
         <b>🏠 House no:</b> ${o.houseNo || '-'}<br>
         <b>📝 Notes:</b> ${o.notes || '-'}<br>
         <b>💰 Amount:</b> KSh ${(o.amount||0).toLocaleString()} &nbsp; • &nbsp; <b>Receipt:</b> ${o.receipt || o.checkoutId || '-'}<br>
-        <b>📞 Phone:</b> ${o.phone || ''}
+        <b>📞 Phone:</b> ${o.phone || ''}<br>
+        ${o.deliveredBy ? `<b>✅ Delivered by:</b> ${o.deliveredBy}` : ''}
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
         <a href="tel:${o.phone}"><button style="margin:0;background:#0077cc">📞 CALL</button></a>
@@ -130,13 +140,24 @@ function renderOrders(orders){
   }).join('');
 }
 async function markDone(i, id){
-  if(!confirm('Mark this as DELIVERED?')) return;
+  if(!confirm('Mark this as DELIVERED by ' + (currentPerson ? currentPerson.name : 'you') + '?')) return;
   document.getElementById('card-'+i).classList.add('delivered');
-  try{ await fetch(API + '/api/orders/' + id + '/delivered', {method:'POST'}); }catch(e){}
+  try{ await fetch(API + '/api/orders/' + id + '/delivered', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ deliveredBy: currentPerson ? currentPerson.name : '' }) }); }catch(e){}
   alert('✅ Marked delivered!');
   loadOrders();
 }
-document.getElementById('pass').addEventListener('keypress', e=>{ if(e.key==='Enter') login(); });
+// Auto-login if already logged in
+try{
+  const saved = JSON.parse(localStorage.getItem('pata_delivery')||'null');
+  if(saved){
+    currentPerson = saved;
+    document.getElementById('whoLabel').innerText = '👋 ' + saved.name + ' • ' + saved.area + ' • Auto-refresh ON 🔊';
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('ordersBox').style.display='block';
+    loadOrders(); setInterval(loadOrders, 30000);
+  }
+}catch(e){}
+document.getElementById('dPin').addEventListener('keypress', e=>{ if(e.key==='Enter') login(); });
 </script>
 </body>
 </html>
