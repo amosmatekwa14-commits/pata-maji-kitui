@@ -20,9 +20,16 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Kitui123";
 const BASE_URL = "https://api.safaricom.co.ke";
 
+// --- GITHUB SYNC - makes Admin delete PERMANENT on Free Render ---
+// Set these 2 in Render > Environment:
+// GITHUB_TOKEN = your GitHub Personal Access Token (contents: write)
+// GITHUB_REPO = yourusername/pata-maji-kitui  e.g. amos123/pata-maji-kitui
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
+const GITHUB_REPO = process.env.GITHUB_REPO || "";
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main";
+
 let adminToken = null;
 
-// --- ADMIN-EDITABLE SETTINGS - Saved in settings.json - FULLY AUTOMATIC ---
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
 function guessCat(name){
   const n = String(name).toLowerCase();
@@ -82,16 +89,33 @@ try{
   if(fs.existsSync(SETTINGS_FILE)){
     const saved = JSON.parse(fs.readFileSync(SETTINGS_FILE,'utf8'));
     SETTINGS = { ...SETTINGS, ...saved, prices: saved.prices || SETTINGS.prices, categories: saved.categories || {} };
-    // Auto-fill categories for old settings.json that had no categories, and for renamed products
     Object.keys(SETTINGS.prices).forEach(n=>{ if(!SETTINGS.categories[n]) SETTINGS.categories[n] = guessCat(n); });
     Object.keys(SETTINGS.categories).forEach(n=>{ if(!SETTINGS.prices[n]) delete SETTINGS.categories[n]; });
   }
 }catch(e){}
-function saveSettings(){ try{ fs.writeFileSync(SETTINGS_FILE, JSON.stringify(SETTINGS,null,2)); }catch(e){} }
+
+// Push settings.json to GitHub so it survives Render restart on Free plan
+async function pushSettingsToGitHub(){
+  if(!GITHUB_TOKEN || !GITHUB_REPO) return { ok:false, reason:'no-github-token' };
+  try{
+    const content = Buffer.from(JSON.stringify(SETTINGS,null,2)).toString('base64');
+    // Get current SHA if file exists on GitHub
+    let sha = null;
+    try{
+      const getRes = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/settings.json?ref=${GITHUB_BRANCH}`, { headers:{ Authorization:`Bearer ${GITHUB_TOKEN}`, Accept:'application/vnd.github+json' } });
+      sha = getRes.data.sha;
+    }catch(e){ sha = null; }
+    const body = { message:'Update settings from Admin - ' + new Date().toISOString(), content, branch: GITHUB_BRANCH };
+    if(sha) body.sha = sha;
+    await axios.put(`https://api.github.com/repos/${GITHUB_REPO}/contents/settings.json`, body, { headers:{ Authorization:`Bearer ${GITHUB_TOKEN}`, Accept:'application/vnd.github+json' } });
+    console.log('✅ settings.json pushed to GitHub');
+    return { ok:true };
+  }catch(e){ console.error('GitHub push failed:', e.response?.data || e.message); return { ok:false, reason: e.message }; }
+}
+function saveSettings(){ try{ fs.writeFileSync(SETTINGS_FILE, JSON.stringify(SETTINGS,null,2)); }catch(e){} pushSettingsToGitHub(); }
 const PRICES = SETTINGS.prices;
 
 function isDailyUse(product){
-  // Uses category, not name - so renaming Fresh Water still keeps Min rule
   if(SETTINGS.categories && SETTINGS.categories[product]) return SETTINGS.categories[product] === 'daily';
   return product === '20L Fresh Water' || product === '20L Salty Water';
 }
@@ -148,21 +172,20 @@ async function querySTK(checkoutId) {
   } catch (e) { return null; }
 }
 
-// Public: Website loads these prices + categories
 app.get('/api/settings', (req, res) => res.json({ success: true, settings: SETTINGS }));
 app.get('/api/prices', (req, res) => res.json({ success: true, prices: SETTINGS.prices }));
 
-// Admin: Change names + prices + categories + min qty - FULLY AUTOMATIC
-app.post('/api/admin/settings', checkAdmin, (req, res) => {
+app.post('/api/admin/settings', checkAdmin, async (req, res) => {
   const { minDailyQty, prices, categories } = req.body;
   if(minDailyQty !== undefined) SETTINGS.minDailyQty = Number(minDailyQty);
   if(prices) SETTINGS.prices = prices;
   if(categories) SETTINGS.categories = categories;
-  // Clean + auto-fill
   Object.keys(SETTINGS.prices).forEach(n=>{ if(!SETTINGS.categories[n]) SETTINGS.categories[n] = guessCat(n); });
   Object.keys(SETTINGS.categories).forEach(n=>{ if(!SETTINGS.prices[n]) delete SETTINGS.categories[n]; });
   saveSettings();
-  res.json({ success: true, settings: SETTINGS });
+  // Wait for GitHub push so delete is permanent
+  const pushed = await pushSettingsToGitHub();
+  res.json({ success: true, settings: SETTINGS, githubSaved: pushed.ok });
 });
 
 app.post('/api/admin/login', (req, res) => {
